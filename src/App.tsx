@@ -10,6 +10,7 @@ import { SignInPage } from "./pages/SignInPage";
 import { SignUpPage } from "./pages/SignUpPage";
 import { AdminLayout } from "./pages/admin/AdminLayout";
 import { DashboardPage } from "./pages/admin/DashboardPage";
+import { ReportsPage } from "./pages/admin/ReportsPage";
 import { UsersPage } from "./pages/admin/UsersPage";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 
@@ -53,6 +54,10 @@ const router = createBrowserRouter([
           {
             path: "dashboard",
             element: <DashboardPage />,
+          },
+          {
+            path: "reports",
+            element: <ReportsPage />,
           },
           {
             path: "users",
