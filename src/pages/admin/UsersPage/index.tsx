@@ -3,8 +3,12 @@ import { useEffect, useState } from "react";
 import { UsersTable } from "@/components/UsersTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { AdminUser } from "@/services/admin-users";
-import { getAdminUsersRequest } from "@/services/admin-users";
+import {
+  getAdminUsersMetricsRequest,
+  getAdminUsersRequest,
+  type AdminUser,
+  type AdminUsersMetrics,
+} from "@/services/admin-users";
 
 function UsersLoading() {
   return (
@@ -18,6 +22,7 @@ function UsersLoading() {
 
 export const UsersPage = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [metrics, setMetrics] = useState<AdminUsersMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -25,8 +30,12 @@ export const UsersPage = () => {
     async function loadUsers() {
       try {
         setErrorMessage(null);
-        const response = await getAdminUsersRequest();
-        setUsers(response);
+        const [usersResponse, usersMetrics] = await Promise.all([
+          getAdminUsersRequest(),
+          getAdminUsersMetricsRequest(),
+        ]);
+        setUsers(usersResponse);
+        setMetrics(usersMetrics);
       } catch (error) {
         setErrorMessage(
           error instanceof Error
@@ -42,14 +51,14 @@ export const UsersPage = () => {
   }, []);
 
   const kpis = [
-    { title: "Total de usuarios", value: users.length.toString() },
+    { title: "Total de usuarios", value: metrics?.total.toString() ?? "0" },
     {
       title: "Administradores",
-      value: users.filter((user) => user.role === "ADMIN").length.toString(),
+      value: metrics?.cards.administradores.toString() ?? "0",
     },
     {
       title: "Usuarios comuns",
-      value: users.filter((user) => user.role === "USER").length.toString(),
+      value: metrics?.cards.usuariosComuns.toString() ?? "0",
     },
   ];
 

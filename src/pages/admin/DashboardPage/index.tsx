@@ -7,7 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { CitizenRequest, RequestStatus } from "@/interfaces/request";
 import {
+  getAdminRequestsMetricsRequest,
   getAdminRequestsRequest,
+  type AdminRequestsMetrics,
   updateAdminRequestStatusRequest,
 } from "@/services/admin-requests";
 
@@ -23,6 +25,7 @@ function DashboardLoading() {
 
 export const DashboardPage = () => {
   const [reqData, setReqData] = useState<CitizenRequest[]>([]);
+  const [metrics, setMetrics] = useState<AdminRequestsMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,8 +39,12 @@ export const DashboardPage = () => {
     async function loadRequests() {
       try {
         setErrorMessage(null);
-        const requests = await getAdminRequestsRequest();
+        const [requests, requestsMetrics] = await Promise.all([
+          getAdminRequestsRequest(),
+          getAdminRequestsMetricsRequest(),
+        ]);
         setReqData(requests);
+        setMetrics(requestsMetrics);
       } catch (error) {
         setErrorMessage(
           error instanceof Error
@@ -53,28 +60,18 @@ export const DashboardPage = () => {
   }, []);
 
   const kpis = [
-    { title: "Total de solicitacoes", value: reqData.length.toString() },
+    { title: "Total de solicitacoes", value: metrics?.total.toString() ?? "0" },
     {
       title: "Abertas",
-      value: reqData.filter((request) => request.status === "ABERTO").length.toString(),
+      value: metrics?.cards.abertas.toString() ?? "0",
     },
     {
       title: "Em triagem ou execucao",
-      value: reqData
-        .filter(
-          (request) =>
-            request.status === "TRIAGEM" || request.status === "EM_EXECUCAO",
-        )
-        .length.toString(),
+      value: metrics?.cards.emTriagemOuExecucao.toString() ?? "0",
     },
     {
       title: "Resolvidas ou encerradas",
-      value: reqData
-        .filter(
-          (request) =>
-            request.status === "RESOLVIDO" || request.status === "ENCERRADO",
-        )
-        .length.toString(),
+      value: metrics?.cards.resolvidasOuEncerradas.toString() ?? "0",
     },
   ];
 
@@ -110,6 +107,8 @@ export const DashboardPage = () => {
           request.id === updatedRequest.id ? updatedRequest : request,
         ),
       );
+      const requestsMetrics = await getAdminRequestsMetricsRequest();
+      setMetrics(requestsMetrics);
       setRequestEditData(updatedRequest);
       setIsDialogOpen(false);
       toast.success("Solicitacao atualizada com sucesso.", {

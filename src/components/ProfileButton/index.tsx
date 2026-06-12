@@ -13,6 +13,20 @@ export const ProfileButton = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
+  function getUserInitials(name?: string) {
+    if (!name) return "US";
+
+    const initials = name
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("");
+
+    return initials || "US";
+  }
+
   function handleSignOut() {
     signOut();
     navigate("/home");
@@ -27,8 +41,8 @@ export const ProfileButton = () => {
             <span className="text-xs text-muted-foreground">{user?.email}</span>
           </div>
           <Avatar>
-            <AvatarImage src="https://github.com/BrunoFujisaki.png" />
-            <AvatarFallback>CN</AvatarFallback>
+            <AvatarImage src="" />
+            <AvatarFallback>{getUserInitials(user?.name)}</AvatarFallback>
           </Avatar>
           <ChevronDown className="w-4 h-4 text-muted-foreground" />
         </DropdownMenuTrigger>
