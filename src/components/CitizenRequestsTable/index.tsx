@@ -3,7 +3,7 @@ import {
   formatRequestCategory,
   formatRequestDate,
 } from "@/lib/request-formatters";
-import { Trash2 } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 
 import {
   AlertDialog,
@@ -29,6 +29,7 @@ import {
 
 type CitizenRequestsTableProps = {
   requests: CitizenRequest[];
+  onView: (request: CitizenRequest) => void;
   onDelete: (request: CitizenRequest) => void;
   deletingRequestId?: string | null;
 };
@@ -51,6 +52,7 @@ const statusVariantMap: Record<RequestStatus, "secondary" | "default"> = {
 
 export const CitizenRequestsTable = ({
   requests,
+  onView,
   onDelete,
   deletingRequestId,
 }: CitizenRequestsTableProps) => {
@@ -78,7 +80,15 @@ export const CitizenRequestsTable = ({
                 {statusLabelMap[request.status]}
               </Badge>
             </TableCell>
-            <TableCell>
+            <TableCell className="flex gap-1">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="cursor-pointer"
+                onClick={() => onView(request)}
+              >
+                <Eye />
+              </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button

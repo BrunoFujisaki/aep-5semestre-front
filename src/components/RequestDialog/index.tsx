@@ -2,7 +2,6 @@ import type { CitizenRequest, RequestStatus } from "@/interfaces/request";
 import {
   formatRequestCategory,
   formatRequestDate,
-  formatRequestStatus,
 } from "@/lib/request-formatters";
 
 import {
@@ -10,6 +9,7 @@ import {
   RequestSelectField,
   RequestTextareaField,
 } from "../RequestFormFields";
+import { RequestStatusHistory } from "../RequestStatusHistory";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -25,22 +25,27 @@ type RequestDialogProps = {
   data: CitizenRequest | null;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  statusValue: RequestStatus;
+  mode?: "edit" | "readonly";
+  statusValue?: RequestStatus;
   isSubmitting?: boolean;
-  onStatusChange: (status: RequestStatus) => void;
-  onUpdate: () => void;
+  onStatusChange?: (status: RequestStatus) => void;
+  onUpdate?: () => void;
 };
 
 export const RequestDialog = ({
   data,
   onOpenChange,
   isOpen,
+  mode = "edit",
   statusValue,
   isSubmitting = false,
   onStatusChange,
   onUpdate,
 }: RequestDialogProps) => {
   if (!data) return null;
+
+  const isReadonly = mode === "readonly";
+  const selectedStatus = statusValue ?? data.status;
 
   const statusOptions = [
     { value: "ABERTO", label: "Aberto" },
@@ -57,13 +62,17 @@ export const RequestDialog = ({
           className="space-y-6"
           onSubmit={(event) => {
             event.preventDefault();
-            onUpdate();
+            if (!isReadonly) {
+              onUpdate?.();
+            }
           }}
         >
           <DialogHeader>
             <DialogTitle>Solicitacao {data.protocolo}</DialogTitle>
             <DialogDescription>
-              Acompanhe os dados da solicitacao e atualize o status.
+              {isReadonly
+                ? "Acompanhe os dados e o historico da sua solicitacao."
+                : "Acompanhe os dados da solicitacao e atualize o status."}
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-2 space-y-4">
@@ -100,46 +109,41 @@ export const RequestDialog = ({
               disabled={true}
               className="col-span-2 flex flex-col space-y-2"
             />
-            <RequestSelectField
-              id="request-status"
-              label="Status"
-              value={statusValue}
-              options={statusOptions}
-              onValueChange={(value) => onStatusChange(value as RequestStatus)}
-              className="col-span-2 flex flex-col space-y-2"
-            />
+            {isReadonly ? (
+              <RequestInputField
+                id="request-status"
+                label="Status"
+                value={statusOptions.find((option) => option.value === data.status)?.label ?? data.status}
+                disabled={true}
+                className="col-span-2 flex flex-col space-y-2"
+              />
+            ) : (
+              <RequestSelectField
+                id="request-status"
+                label="Status"
+                value={selectedStatus}
+                options={statusOptions}
+                onValueChange={(value) => onStatusChange?.(value as RequestStatus)}
+                className="col-span-2 flex flex-col space-y-2"
+              />
+            )}
           </div>
 
-          <div className="space-y-3 border-t pt-4">
-            <h4 className="flex items-center gap-2 text-sm font-semibold">
-              Resumo
-            </h4>
-            <div className="ml-2 space-y-4 border-l-2 border-muted pl-4 pt-2">
-              <div className="relative">
-                <div className="absolute -left-[22px] top-1.5 h-3 w-3 rounded-full border-2 border-primary bg-background"></div>
-                <div className="rounded-md border bg-muted/30 p-3 text-sm shadow-sm">
-                  <div className="mb-1 flex justify-between">
-                    <span className="font-semibold text-foreground">
-                      {data.usuario?.name ?? "Anonimo"}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatRequestDate(data.dataAtualizacao)}
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Status atual: {formatRequestStatus(statusValue)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <RequestStatusHistory
+            requestId={data.id}
+            currentStatus={selectedStatus}
+          />
           <DialogFooter>
             <DialogClose asChild>
-              <Button variant="outline">Cancelar</Button>
+              <Button variant="outline">
+                {isReadonly ? "Fechar" : "Cancelar"}
+              </Button>
             </DialogClose>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Salvando..." : "Salvar alteracoes"}
-            </Button>
+            {!isReadonly ? (
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Salvando..." : "Salvar alteracoes"}
+              </Button>
+            ) : null}
           </DialogFooter>
         </form>
       </DialogContent>

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { CitizenRequestsTable } from "@/components/CitizenRequestsTable";
 import { Header } from "@/components/Header";
+import { RequestDialog } from "@/components/RequestDialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
@@ -30,6 +31,10 @@ export const CitizenPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [deletingRequestId, setDeletingRequestId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<CitizenRequest | null>(
+    null,
+  );
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     async function loadRequests() {
@@ -81,6 +86,19 @@ export const CitizenPage = () => {
     }
   };
 
+  const handleViewRequest = (request: CitizenRequest) => {
+    setSelectedRequest(request);
+    setIsDialogOpen(true);
+  };
+
+  const handleDialogOpenChange = (open: boolean) => {
+    setIsDialogOpen(open);
+
+    if (!open) {
+      setSelectedRequest(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -129,12 +147,20 @@ export const CitizenPage = () => {
           {!isLoading && !errorMessage && requests.length > 0 ? (
             <CitizenRequestsTable
               requests={requests}
+              onView={handleViewRequest}
               onDelete={handleDeleteRequest}
               deletingRequestId={deletingRequestId}
             />
           ) : null}
         </section>
       </main>
+
+      <RequestDialog
+        data={selectedRequest}
+        isOpen={isDialogOpen}
+        mode="readonly"
+        onOpenChange={handleDialogOpenChange}
+      />
     </div>
   );
 };

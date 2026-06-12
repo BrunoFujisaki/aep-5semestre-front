@@ -2,6 +2,7 @@ import type {
   CitizenRequest,
   RequestCategory,
   RequestPriority,
+  RequestStatusHistory,
 } from "@/interfaces/request";
 
 export type CreateRequestPayload = {
@@ -102,4 +103,30 @@ export async function createAnonymousRequest(
   payload: CreateRequestPayload,
 ): Promise<CitizenRequest> {
   return createRequest("/solicitacoes/anonimas", payload);
+}
+
+export async function getRequestStatusHistoryRequest(
+  requestId: string,
+): Promise<RequestStatusHistory> {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    throw new Error("Sessao expirada. Faca login novamente.");
+  }
+
+  const response = await fetch(
+    `http://localhost:8080/solicitacoes/${requestId}/status-history`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Nao foi possivel carregar o historico da solicitacao.");
+  }
+
+  return response.json();
 }

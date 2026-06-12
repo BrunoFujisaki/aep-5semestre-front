@@ -30,3 +30,22 @@ export type CitizenRequest = {
     email: string;
   } | null;
 };
+
+export type RequestStatusHistoryEvent = {
+  id: string;
+  eventType: string;
+  occurredAt: string;
+  fromStatus: RequestStatus | null;
+  toStatus: RequestStatus;
+  actor: {
+    id: string;
+    name: string;
+  } | null;
+};
+
+export type RequestStatusHistory = {
+  requestId: string;
+  protocolo: string;
+  currentStatus: RequestStatus;
+  events: RequestStatusHistoryEvent[];
+};
